@@ -186,6 +186,19 @@ export class DxDateRangeBoxComponent extends DxComponent implements OnDestroy, C
 
 
     /**
+     * [descr:DateBoxBaseOptions.calendarType]
+    
+     */
+    @Input()
+    get calendarType(): string {
+        return this._getOption('calendarType');
+    }
+    set calendarType(value: string) {
+        this._setOption('calendarType', value);
+    }
+
+
+    /**
      * [descr:DateBoxBaseOptions.cancelButtonText]
     
      */

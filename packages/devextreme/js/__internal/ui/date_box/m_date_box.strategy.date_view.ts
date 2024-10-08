@@ -119,8 +119,9 @@ const DateViewStrategy = DateBoxStrategy.inherit({
     return {
       value: this.dateBoxValue() || new Date(),
       type: this.dateBox.option('type'),
-      minDate: this.dateBox.dateOption('min') || new Date(1900, 0, 1),
-      maxDate: this.dateBox.dateOption('max') || new Date(Date.now() + 50 * dateUtils.ONE_YEAR),
+      minDate: this.dateBox.dateOption('min') || (this._getDateUtils() || dateUtils).MIN_DATEVIEW_DEFAULT_DATE,
+      maxDate: this.dateBox.dateOption('max') || (this._getDateUtils() || dateUtils).MAX_DATEVIEW_DEFAULT_DATE,
+      calendarType: this.dateBox.option('calendarType'),
       onDisposing: function () {
         this._widget = null;
       }.bind(this),

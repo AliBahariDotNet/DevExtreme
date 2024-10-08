@@ -4,6 +4,7 @@ import { createComponent } from "./core/index";
 type AccessibleOptions = Pick<Properties,
   "accessKey" |
   "activeStateEnabled" |
+  "calendarType" |
   "cellTemplate" |
   "dateSerializationFormat" |
   "disabled" |
@@ -51,6 +52,7 @@ const DxCalendar = createComponent({
   props: {
     accessKey: String,
     activeStateEnabled: Boolean,
+    calendarType: String,
     cellTemplate: {},
     dateSerializationFormat: String,
     disabled: Boolean,
@@ -106,6 +108,7 @@ const DxCalendar = createComponent({
     "update:hoveredElement": null,
     "update:accessKey": null,
     "update:activeStateEnabled": null,
+    "update:calendarType": null,
     "update:cellTemplate": null,
     "update:dateSerializationFormat": null,
     "update:disabled": null,

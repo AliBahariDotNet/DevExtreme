@@ -9,12 +9,14 @@ import {
 import dateUtils from './core/utils/date';
 import numberLocalization from './localization/number';
 import dateLocalization from './localization/date';
+import persianDateUtils from './core/utils/date_persian';
+
 import dependencyInjector from './core/utils/dependency_injector';
 
 import './localization/currency';
 
 export default dependencyInjector({
-    format: function(value, format) {
+    format: function(value, format, calendarType) {
         const formatIsValid = isString(format) && format !== '' || isPlainObject(format) || isFunction(format);
         const valueIsValid = isNumeric(value) || isDate(value);
 
@@ -36,6 +38,9 @@ export default dependencyInjector({
         }
 
         if(isDate(value)) {
+            if(calendarType === 'persian') {
+                return persianDateUtils.format(value, format);
+            }
             return dateLocalization.format(value, format);
         }
     },
