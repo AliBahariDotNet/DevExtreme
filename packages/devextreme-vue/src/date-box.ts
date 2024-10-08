@@ -11,6 +11,7 @@ type AccessibleOptions = Pick<Properties,
   "applyValueMode" |
   "buttons" |
   "calendarOptions" |
+  'calendarType' |
   "cancelButtonText" |
   "dateOutOfRangeMessage" |
   "dateSerializationFormat" |
@@ -93,6 +94,7 @@ const DxDateBox = createComponent({
     applyValueMode: String,
     buttons: Array,
     calendarOptions: Object,
+    calendarType: String,
     cancelButtonText: String,
     dateOutOfRangeMessage: String,
     dateSerializationFormat: String,
@@ -172,6 +174,7 @@ const DxDateBox = createComponent({
     "update:applyValueMode": null,
     "update:buttons": null,
     "update:calendarOptions": null,
+    "update:calendarType": null,
     "update:cancelButtonText": null,
     "update:dateOutOfRangeMessage": null,
     "update:dateSerializationFormat": null,

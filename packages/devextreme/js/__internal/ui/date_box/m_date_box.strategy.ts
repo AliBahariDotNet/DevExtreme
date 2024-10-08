@@ -1,6 +1,7 @@
 import Class from '@js/core/class';
 import $ from '@js/core/renderer';
 import { noop } from '@js/core/utils/common';
+import persianDateUtils from '@js/core/utils/date_persian';
 import eventsEngine from '@js/events/core/events_engine';
 import dateLocalization from '@js/localization/date';
 
@@ -45,10 +46,9 @@ const DateBoxStrategy = Class.inherit({
   customizeButtons: noop,
 
   getParsedText(text, format) {
-    // @ts-expect-error
-    const value = dateLocalization.parse(text, format);
-    // @ts-expect-error
-    return value || dateLocalization.parse(text);
+    const _dateLocalization = this._getDateUtils() || dateLocalization;
+    const value = _dateLocalization.parse(text, format);
+    return value || _dateLocalization.parse(text);
   },
 
   renderInputMinMax: noop,
@@ -127,6 +127,19 @@ const DateBoxStrategy = Class.inherit({
       return this.dateBox.dateValue.apply(this.dateBox, arguments);
     }
     return this.dateBox.dateOption.apply(this.dateBox, ['value']);
+  },
+
+  _getCalendarType(): string {
+    return this.dateBox.option('calendarType') || '';
+  },
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
+    }
   },
 });
 

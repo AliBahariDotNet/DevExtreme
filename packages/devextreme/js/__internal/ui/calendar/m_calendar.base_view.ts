@@ -4,6 +4,7 @@ import { data as elementData } from '@js/core/element_data';
 import $ from '@js/core/renderer';
 import { noop } from '@js/core/utils/common';
 import coreDateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import { extend } from '@js/core/utils/extend';
 import { name as clickEventName } from '@js/events/click';
@@ -58,6 +59,10 @@ const SELECTION_MODE = {
 
 const BaseView = (Widget as any).inherit({
 
+  dateUtils: abstract,
+
+  dateLocalization: abstract,
+
   _getViewName() {
     return 'base';
   },
@@ -79,6 +84,14 @@ const BaseView = (Widget as any).inherit({
   },
 
   _initMarkup() {
+    if (this.option('calendarType') === 'persian') {
+      this.dateUtils = persianDateUtils;
+      this.dateLocalization = persianDateUtils;
+    } else {
+      this.dateUtils = coreDateUtils;
+      this.dateLocalization = dateLocalization;
+    }
+
     this.callBase();
 
     this._renderImpl();
@@ -107,7 +120,7 @@ const BaseView = (Widget as any).inherit({
 
     const localizedWidgetName = this._getLocalizedWidgetName();
 
-    const formattedDate = dateLocalization.format(value, ARIA_LABEL_DATE_FORMAT);
+    const formattedDate = this.dateLocalization.format(value, ARIA_LABEL_DATE_FORMAT);
     // @ts-expect-error
     const selectedDatesText = messageLocalization.format('dxCalendar-selectedDate', formattedDate);
 
@@ -123,8 +136,8 @@ const BaseView = (Widget as any).inherit({
 
     const [startDate, endDate] = value;
 
-    const formattedStartDate = dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
-    const formattedEndDate = dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedStartDate = this.dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedEndDate = this.dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
 
     const selectedDatesText = startDate && endDate
       // @ts-expect-error
@@ -503,7 +516,7 @@ const BaseView = (Widget as any).inherit({
     const format = this._getCurrentDateFormat();
 
     const dateRangeText = format
-      ? dateLocalization.format(date, format)
+      ? this.dateLocalization.format(date, format)
       : this._getCellText(date);
 
     const ariaLabel = isToday

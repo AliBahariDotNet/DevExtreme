@@ -88,6 +88,7 @@ class DateRangeBox extends Editor<Properties> {
       applyValueMode: 'instantly',
       buttons: undefined,
       calendarOptions: {},
+      calendarType: null,
       cancelButtonText: messageLocalization.format('Cancel'),
       endDateOutOfRangeMessage: messageLocalization.format('dxDateRangeBox-endDateOutOfRangeMessage'),
       dateSerializationFormat: undefined,
@@ -515,6 +516,7 @@ class DateRangeBox extends Editor<Properties> {
       acceptCustomValue: options.acceptCustomValue,
       activeStateEnabled: options.activeStateEnabled,
       applyValueMode: options.applyValueMode,
+      calendarType: options.calendarType,
       dateSerializationFormat: options.dateSerializationFormat,
       deferRendering: options.deferRendering,
       disabled: options.disabled,
@@ -1062,6 +1064,10 @@ class DateRangeBox extends Editor<Properties> {
         break;
       }
       case '_currentSelection':
+        break;
+      case 'calendarType':
+        this.getStartDateBox().option(name, value);
+        this.getEndDateBox().option(name, value);
         break;
       default:
       // @ts-expect-error

@@ -199,6 +199,19 @@ export class DxDateBoxComponent extends DxComponent implements OnDestroy, Contro
 
 
     /**
+     * [descr:DateBoxBaseOptions.calendarType]
+    
+     */
+    @Input()
+    get calendarType(): string {
+        return this._getOption('calendarType');
+    }
+    set calendarType(value: string) {
+        this._setOption('calendarType', value);
+    }
+
+
+    /**
      * [descr:DateBoxBaseOptions.cancelButtonText]
     
      */
