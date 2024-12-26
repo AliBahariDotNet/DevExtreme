@@ -699,6 +699,46 @@ const createDateWithFullYear = function (year, ...args) {
   return result;
 };
 
+const getFirstMonthDateInYear = function(date) {
+  if(!isDefined(date)) return;
+  return createDateWithFullYear(date.getFullYear(), 0, 1);
+};
+
+const getLastMonthDateInYear = function(date) {
+  if(!isDefined(date)) return;
+  date = new Date(date.getFullYear(), 12, 1);
+  date = new Date(date - 1);
+  return date;
+};
+
+const getNextMonthDate = function(date) {
+  date = new Date(date);
+  date.setMonth(date.getMonth() + 1);
+  return date;
+};
+
+const getDate = function(date) { return date.getDate(); };
+
+const getMonth = function(date) { return date.getMonth(); };
+
+const getYear = function(date) { return date.getFullYear(); };
+
+const getNextYearDate = function(date) {
+  date = new Date(date);
+  date.setFullYear(date.getFullYear() + 1);
+  return date;
+};
+
+const getNextDecadeDate = function(date) {
+  date = new Date(date);
+  date.setFullYear(date.getFullYear() + 10);
+  return date;
+};
+
+const getMaxMonthDay = function(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+};
+
 const getMachineTimezoneName = () => {
   const hasIntl = typeof Intl !== 'undefined';
   return hasIntl
@@ -803,6 +843,16 @@ const dateUtils = {
   getDatesOfInterval,
 
   createDateWithFullYear,
+
+  getFirstMonthDateInYear,
+  getLastMonthDateInYear,
+  getNextMonthDate,
+  getDate,
+  getMonth,
+  getYear,
+  getNextYearDate,
+  getNextDecadeDate,
+  getMaxMonthDay,
 
   getMachineTimezoneName,
 

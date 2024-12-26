@@ -4,6 +4,7 @@ import config from '@js/core/config';
 import devices from '@js/core/devices';
 import browser from '@js/core/utils/browser';
 import dateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import { createTextElementHiddenCopy } from '@js/core/utils/dom';
 import { extend } from '@js/core/utils/extend';
@@ -98,6 +99,8 @@ const DateBox = DropDownEditor.inherit({
       applyButtonText: messageLocalization.format('OK'),
 
       adaptivityEnabled: false,
+
+      calendarType: null,
 
       calendarOptions: {},
 
@@ -467,14 +470,16 @@ const DateBox = DropDownEditor.inherit({
     const mode = this.option('mode');
     let displayedText;
 
+    const _dateLocalization = this._getDateUtils() || dateLocalization;
+
     if (mode === 'text') {
       const displayFormat = this._strategy.getDisplayFormat(this.option('displayFormat'));
-      displayedText = dateLocalization.format(value, displayFormat);
+      displayedText = _dateLocalization.format(value, displayFormat);
     } else {
       const format = this._getFormatByMode(mode);
 
       if (format) {
-        displayedText = dateLocalization.format(value, format);
+        displayedText = _dateLocalization.format(value, format);
       } else {
         displayedText = uiDateUtils.toStandardDateFormat(value, mode);
       }
@@ -684,6 +689,7 @@ const DateBox = DropDownEditor.inherit({
       case 'dateSerializationFormat':
       case 'interval':
       case 'disabledDates':
+      case 'calendarType':
       case 'calendarOptions':
         this._invalidate();
         break;
@@ -790,6 +796,19 @@ const DateBox = DropDownEditor.inherit({
     this.callBase();
     if (value === null) {
       this._applyInternalValidation(null);
+    }
+  },
+
+  _getCalendarType(): string {
+    return this.option('calendarType') || '';
+  },
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
     }
   },
 });

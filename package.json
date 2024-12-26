@@ -14,7 +14,7 @@
     "react:regenerate": "nx regenerate devextreme-react",
     "react-storybook:start": "nx start devextreme-react-storybook",
     "tools": "dx-tools",
-    "tools:discover-declarations": "dx-tools discover-declarations --sources ./packages/devextreme/js --exclude \"js/(renovation|__internal|.eslintrc.js)\" --compiler-options \"{ \\\"typeRoots\\\": [] }\" --artifacts ./artifacts/internal-tools",
+    "tools:discover-declarations": "dx-tools discover-declarations --sources ./packages/devextreme/js --exclude \"js/(renovation|__internal|.eslintrc.js|core/utils/moment/moment.js|core/utils/moment/locale/fa.js|core/utils/jalali-moment/jalali-moment.js)\" --compiler-options \"{ \\\"typeRoots\\\": [] }\" --artifacts ./artifacts/internal-tools",
     "tools:generate-imd": "dx-tools make-integration-metadata --artifacts ./artifacts/internal-tools",
     "tools:generate-ng-smd": "dx-tools make-angular-metadata --artifacts ./artifacts/internal-tools",
     "tools:discover-metadata": "npm run tools:discover-declarations && npm run tools:generate-imd && npm run tools:generate-ng-smd",

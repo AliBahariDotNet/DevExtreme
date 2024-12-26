@@ -103,7 +103,7 @@ const normalizeSortingInfo = function (sort) {
 };
 
 const formatValue = function (value, options) {
-  const valueText = formatHelper.format(value, options.format) || (value && value.toString()) || '';
+  const valueText = formatHelper.format(value, options.format, options.calendarType) || (value && value.toString()) || '';
   const formatObject = {
     value,
     valueText: options.getDisplayFormat ? options.getDisplayFormat(valueText) : valueText,

@@ -167,13 +167,13 @@ const escapeChars = function(pattern, defaultPattern, processedIndexes, patternP
     return pattern;
 };
 
-export const getFormat = function(formatter) {
+export const getFormat = function(formatter, dateUtils) {
     const processedIndexes = [];
-    const defaultPattern = formatValue(new Date(2009, 8, 8, 6, 5, 4), formatter);
+    const defaultPattern = formatValue(dateUtils ? dateUtils.getDefaultDatePatternForFormat() : new Date(2009, 8, 8, 6, 5, 4), formatter);
     const patternPositions = defaultPattern.split('').map(function(_, index) { return index; });
     let result = defaultPattern;
     const replacedPatterns = {};
-    const datePatterns = [
+    const datePatterns = dateUtils ? dateUtils.getDatePatternsForFormat() : [
         { date: new Date(2009, 8, 8, 6, 5, 4, 111), pattern: 'S' },
         { date: new Date(2009, 8, 8, 6, 5, 2), pattern: 's' },
         { date: new Date(2009, 8, 8, 6, 2, 4), pattern: 'm' },

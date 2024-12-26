@@ -1,6 +1,7 @@
 import dateLocalization from '@js/common/core/localization/date';
 import registerComponent from '@js/core/component_registrator';
 import $ from '@js/core/renderer';
+import persianDateUtils from '@js/core/utils/date_persian';
 import { extend } from '@js/core/utils/extend';
 import Box from '@js/ui/box';
 import Editor from '@js/ui/editor/editor';
@@ -108,7 +109,7 @@ const TimeView = (Editor as any).inherit({
   },
 
   _getBoxItems(is12HourFormat) {
-    const items = [{
+    let items = [{
       ratio: 0,
       shrink: 0,
       baseSize: 'auto',
@@ -125,6 +126,8 @@ const TimeView = (Editor as any).inherit({
       baseSize: 'auto',
       template: () => this._minuteBox.$element(),
     }];
+
+    if (this.option('rtlEnabled')) items = items.reverse();
 
     if (is12HourFormat) {
       items.push({
@@ -214,8 +217,7 @@ const TimeView = (Editor as any).inherit({
   },
 
   _createFormat12Box() {
-    // @ts-expect-error
-    const periodNames = dateLocalization.getPeriodNames();
+    const periodNames = (this._getDateUtils() || dateLocalization).getPeriodNames();
     const editor = this._format12 = this._createComponent($('<div>').addClass(TIMEVIEW_FORMAT12_CLASS), SelectBox, {
       items: [
         { value: TIMEVIEW_FORMAT12_AM, text: periodNames[0] },
@@ -261,9 +263,7 @@ const TimeView = (Editor as any).inherit({
   _getNumberBoxConfig() {
     return {
       showSpinButtons: true,
-      displayValueFormatter(value) {
-        return (value < 10 ? '0' : '') + value;
-      },
+      format: '00',
       stylingMode: this.option('stylingMode'),
     };
   },
@@ -306,10 +306,24 @@ const TimeView = (Editor as any).inherit({
       case 'use24HourFormat':
       case '_showClock':
       case 'stylingMode':
+      case 'calendarType':
         this._invalidate();
         break;
       default:
         this.callBase(args);
+    }
+  },
+
+  _getCalendarType(): string {
+    return this.option('calendarType') || '';
+  },
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
     }
   },
 });

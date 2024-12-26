@@ -13,6 +13,7 @@ import $ from '@js/core/renderer';
 import { FunctionTemplate } from '@js/core/templates/function_template';
 import { noop } from '@js/core/utils/common';
 import dateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import { extend } from '@js/core/utils/extend';
 import { inRange } from '@js/core/utils/math';
@@ -121,6 +122,8 @@ const Calendar = Editor.inherit({
       onContouredChanged: null,
       skipFocusCheck: false,
 
+      calendarType: null,
+
       _todayDate: () => new Date(),
     });
   },
@@ -189,9 +192,10 @@ const Calendar = Editor.inherit({
           return;
         }
 
-        const date = dateUtils.sameView(zoomLevel, currentDate, min)
+        const _dateUtils = this._getDateUtils() || dateUtils;
+        const date = _dateUtils.sameView(zoomLevel, currentDate, min)
           ? min
-          : dateUtils.getViewFirstCellDate(zoomLevel, currentDate);
+          : _dateUtils.getViewFirstCellDate(zoomLevel, currentDate);
 
         this._moveToClosestAvailableDate(date);
       },
@@ -206,9 +210,10 @@ const Calendar = Editor.inherit({
           return;
         }
 
-        const date = dateUtils.sameView(zoomLevel, currentDate, max)
+        const _dateUtils = this._getDateUtils() || dateUtils;
+        const date = _dateUtils.sameView(zoomLevel, currentDate, max)
           ? max
-          : dateUtils.getViewLastCellDate(zoomLevel, currentDate);
+          : _dateUtils.getViewLastCellDate(zoomLevel, currentDate);
 
         this._moveToClosestAvailableDate(date);
       },
@@ -290,6 +295,9 @@ const Calendar = Editor.inherit({
   },
 
   _shiftDate(zoomLevel, date, offset, reverse) {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.shiftDate(zoomLevel, date, offset, reverse); }
+
     // eslint-disable-next-line default-case
     switch (zoomLevel) {
       case ZOOM_LEVEL.MONTH:
@@ -355,27 +363,31 @@ const Calendar = Editor.inherit({
     return this._navigator._prevButton.option('disabled');
   },
 
-  // @ts-expect-error
   _areDatesInSameView(zoomLevel, date1, date2) {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.areDatesInSameView(zoomLevel, date1, date2); }
+
     // eslint-disable-next-line default-case
     switch (zoomLevel) {
       case ZOOM_LEVEL.MONTH:
         return date1.getMonth() === date2.getMonth();
       case ZOOM_LEVEL.YEAR:
-        return date1.getYear() === date2.getYear();
+        return date1.getFullYear() === date2.getFullYear();
       case ZOOM_LEVEL.DECADE:
       // @ts-expect-error
       // eslint-disable-next-line radix
-        return parseInt(date1.getYear() / 10) === parseInt(date2.getYear() / 10);
+        return parseInt(date1.getFullYear() / 10) === parseInt(date2.getFullYear() / 10);
       case ZOOM_LEVEL.CENTURY:
       // @ts-expect-error
       // eslint-disable-next-line radix
-        return parseInt(date1.getYear() / 100) === parseInt(date2.getYear() / 100);
+        return parseInt(date1.getFullYear() / 100) === parseInt(date2.getFullYear() / 100);
     }
   },
 
-  // @ts-expect-error
   _areDatesInNeighborView(zoomLevel, date1, date2) {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.areDatesInNeighborView(zoomLevel, date1, date2); }
+
     const monthMinDistance = (a, b) => {
       const abs = Math.abs(a - b);
       return Math.min(abs, 12 - abs);
@@ -386,11 +398,11 @@ const Calendar = Editor.inherit({
       case ZOOM_LEVEL.MONTH:
         return monthMinDistance(date1.getMonth(), date2.getMonth()) <= 1;
       case ZOOM_LEVEL.YEAR:
-        return Math.abs(date1.getYear() - date2.getYear()) <= 1;
+        return Math.abs(date1.getFullYear() - date2.getFullYear()) <= 1;
       case ZOOM_LEVEL.DECADE:
-        return Math.abs(date1.getYear() - date2.getYear()) <= 10;
+        return Math.abs(date1.getFullYear() - date2.getFullYear()) <= 10;
       case ZOOM_LEVEL.CENTURY:
-        return Math.abs(date1.getYear() - date2.getYear()) <= 100;
+        return Math.abs(date1.getFullYear() - date2.getFullYear()) <= 100;
     }
   },
 
@@ -643,12 +655,18 @@ const Calendar = Editor.inherit({
         break;
     }
 
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getViewsOffset(startDate, endDate, zoomCorrection); }
+
     // @ts-expect-error
     // eslint-disable-next-line @typescript-eslint/space-infix-ops, radix
     return parseInt(endDate.getFullYear() / zoomCorrection)- parseInt(startDate.getFullYear() / zoomCorrection);
   },
 
   _getMonthsOffset(startDate, endDate) {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getMonthsOffset(startDate, endDate); }
+
     const yearOffset = endDate.getFullYear() - startDate.getFullYear();
     const monthOffset = endDate.getMonth() - startDate.getMonth();
 
@@ -677,6 +695,9 @@ const Calendar = Editor.inherit({
 
   _getDateByOffset(offset, date) {
     date = this._getDate(date ?? this.option('currentDate'));
+
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getDateByOffset(offset, date, this.option('zoomLevel')); }
 
     const currentDay = date.getDate();
     const difference = dateUtils.getDifferenceInMonth(this.option('zoomLevel')) * offset;
@@ -777,7 +798,6 @@ const Calendar = Editor.inherit({
       this._beforeView = this._isViewAvailable(beforeDate) ? this._renderSpecificView(beforeDate) : null;
 
       const afterDate = this._getDateByOffset(viewsCount, currentDate);
-      afterDate.setDate(1);
 
       this._afterView = this._isViewAvailable(afterDate) ? this._renderSpecificView(afterDate) : null;
     }
@@ -823,6 +843,7 @@ const Calendar = Editor.inherit({
       cellTemplate: this._getTemplateByOption('cellTemplate'),
       allowValueSelection: this._isMaxZoomLevel(),
       _todayDate: this.option('_todayDate'),
+      calendarType: this._getCalendarType(),
     };
   },
 
@@ -846,8 +867,9 @@ const Calendar = Editor.inherit({
 
   _isViewAvailable(date) {
     const zoomLevel = this.option('zoomLevel');
-    const min = dateUtils.getViewMinBoundaryDate(zoomLevel, this._getMinDate());
-    const max = dateUtils.getViewMaxBoundaryDate(zoomLevel, this._getMaxDate());
+    const _dateUtils = this._getDateUtils() || dateUtils;
+    const min = _dateUtils.getViewMinBoundaryDate(zoomLevel, this._getMinDate());
+    const max = _dateUtils.getViewMaxBoundaryDate(zoomLevel, this._getMaxDate());
 
     return dateUtils.dateInRange(date, min, max);
   },
@@ -1001,7 +1023,8 @@ const Calendar = Editor.inherit({
     const min = this._getMinDate();
     const max = this._getMaxDate();
 
-    return dateUtils.sameView(zoomLevel, min, max) || this.option('minZoomLevel') === zoomLevel;
+    const _dateUtils = this._getDateUtils() || dateUtils;
+    return _dateUtils.sameView(zoomLevel, min, max) || this.option('minZoomLevel') === zoomLevel;
   },
 
   _updateButtonsVisibility() {
@@ -1566,6 +1589,9 @@ const Calendar = Editor.inherit({
       case 'weekNumberRule':
         this._refreshViews();
         break;
+      case 'calendarType':
+        this._invalidate();
+        break;
       default:
         this.callBase(args);
     }
@@ -1573,6 +1599,19 @@ const Calendar = Editor.inherit({
 
   getContouredDate() {
     return this._view.option('contouredDate');
+  },
+
+  _getCalendarType(): string {
+    return this.option('calendarType') || '';
+  },
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
+    }
   },
 });
 

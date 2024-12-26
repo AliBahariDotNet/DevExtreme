@@ -2,6 +2,7 @@ import dateLocalization from '@js/common/core/localization/date';
 import registerComponent from '@js/core/component_registrator';
 import $ from '@js/core/renderer';
 import dateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import { extend } from '@js/core/utils/extend';
 import { each } from '@js/core/utils/iterator';
 import Editor from '@js/ui/editor/editor';
@@ -48,8 +49,6 @@ const DateView = (Editor as any).inherit({
 
   _getDefaultOptions() {
     return extend(this.callBase(), {
-      minDate: uiDateUtils.MIN_DATEVIEW_DEFAULT_DATE,
-      maxDate: uiDateUtils.MAX_DATEVIEW_DEFAULT_DATE,
       type: TYPE.date,
       value: new Date(),
       applyCompactClass: false,
@@ -147,14 +146,13 @@ const DateView = (Editor as any).inherit({
     type = type || that.option('type');
     that._rollerConfigs = {};
     // @ts-expect-error
-    dateLocalization.getFormatParts(uiDateUtils.FORMATS_MAP[type]).forEach((partName) => {
+    dateLocalization.getFormatParts(this._getUiDateUtils().FORMATS_MAP[type]).forEach((partName) => {
       that._createRollerConfig(partName);
     });
   },
 
   _createRollerConfig(componentName) {
-    // @ts-expect-error
-    const componentInfo = uiDateUtils.DATE_COMPONENTS_INFO[componentName];
+    const componentInfo = this._getUiDateUtils().DATE_COMPONENTS_INFO[componentName];
 
     const valueRange = this._calculateRollerConfigValueRange(componentName);
     const { startValue } = valueRange;
@@ -170,7 +168,7 @@ const DateView = (Editor as any).inherit({
       valueItems: [],
       displayItems: [],
       getIndex(value) {
-        return value[componentInfo.getter]() - startValue;
+        return componentInfo.getter(value) - startValue;
       },
     };
 
@@ -211,14 +209,16 @@ const DateView = (Editor as any).inherit({
       const minDate = this.option('minDate');
       const maxDate = this.option('maxDate');
 
-      if (roller.type === ROLLER_TYPE.month) {
-        currentDate = Math.min(currentDate, uiDateUtils.getMaxMonthDay(currentValue.getFullYear(), rollerValue));
-      } else if (roller.type === ROLLER_TYPE.year) {
-        currentDate = Math.min(currentDate, uiDateUtils.getMaxMonthDay(rollerValue, currentValue.getMonth()));
-      }
+      if (!this._getDateUtils()) {
+        if (roller.type === ROLLER_TYPE.month) {
+          currentDate = Math.min(currentDate, uiDateUtils.getMaxMonthDay(currentValue.getFullYear(), rollerValue));
+        } else if (roller.type === ROLLER_TYPE.year) {
+          currentDate = Math.min(currentDate, uiDateUtils.getMaxMonthDay(rollerValue, currentValue.getMonth()));
+        }
 
-      currentValue.setDate(currentDate);
-      currentValue[setValue](rollerValue);
+        currentValue.setDate(currentDate);
+      }
+      setValue(currentValue, rollerValue);
 
       const normalizedDate = dateUtils.normalizeDate(currentValue, minDate, maxDate);
       currentValue = uiDateUtils.mergeDates(normalizedDate, currentValue, 'time');
@@ -263,42 +263,44 @@ const DateView = (Editor as any).inherit({
   },
 
   _calculateRollerConfigValueRange(componentName) {
+    const _dateUtils = this._getDateUtils() || dateUtils;
+
     const curDate = this._getCurrentDate();
     const minDate = this.option('minDate');
     const maxDate = this.option('maxDate');
 
-    const minYear = dateUtils.sameYear(curDate, minDate);
-    const minMonth = minYear && curDate.getMonth() === minDate.getMonth();
-    const maxYear = dateUtils.sameYear(curDate, maxDate);
-    const maxMonth = maxYear && curDate.getMonth() === maxDate.getMonth();
-    const minHour = minMonth && curDate.getDate() === minDate.getDate();
-    const maxHour = maxMonth && curDate.getDate() === maxDate.getDate();
-    // @ts-expect-error
-    const componentInfo = uiDateUtils.DATE_COMPONENTS_INFO[componentName];
+    const minYear = _dateUtils.sameYear(curDate, minDate);
+    const minMonth = minYear && _dateUtils.sameMonth(curDate, minDate);
+    const maxYear = _dateUtils.sameYear(curDate, maxDate);
+    const maxMonth = maxYear && _dateUtils.sameMonth(curDate, maxDate);
+    const minHour = minMonth && _dateUtils.sameDate(curDate, minDate);
+    const maxHour = maxMonth && _dateUtils.sameDate(curDate, maxDate);
+
+    const componentInfo = this._getUiDateUtils().DATE_COMPONENTS_INFO[componentName];
     let { startValue } = componentInfo;
     let { endValue } = componentInfo;
 
     if (componentName === ROLLER_TYPE.year) {
-      startValue = minDate.getFullYear();
-      endValue = maxDate.getFullYear();
+      startValue = _dateUtils.getYear(minDate);
+      endValue = _dateUtils.getYear(maxDate);
     }
 
     if (componentName === ROLLER_TYPE.month) {
       if (minYear) {
-        startValue = minDate.getMonth();
+        startValue = _dateUtils.getMonth(minDate);
       }
       if (maxYear) {
-        endValue = maxDate.getMonth();
+        endValue = _dateUtils.getMonth(maxDate);
       }
     }
 
     if (componentName === ROLLER_TYPE.day) {
-      endValue = uiDateUtils.getMaxMonthDay(curDate.getFullYear(), curDate.getMonth());
+      endValue = _dateUtils.getMaxMonthDay(curDate);
       if (minYear && minMonth) {
-        startValue = minDate.getDate();
+        startValue = _dateUtils.getDate(minDate);
       }
       if (maxYear && maxMonth) {
-        endValue = maxDate.getDate();
+        endValue = _dateUtils.getDate(maxDate);
       }
     }
 
@@ -346,6 +348,28 @@ const DateView = (Editor as any).inherit({
   _clean() {
     this.callBase();
     delete this._$rollersContainer;
+  },
+
+  _getCalendarType(): string {
+    return this.option('calendarType') || '';
+  },
+
+  _getUiDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return uiDateUtils;
+    }
+  },
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
+    }
   },
 });
 
