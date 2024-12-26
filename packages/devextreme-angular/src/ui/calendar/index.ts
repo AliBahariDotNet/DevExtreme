@@ -98,6 +98,19 @@ export class DxCalendarComponent extends DxComponent implements OnDestroy, Contr
 
 
     /**
+     * [descr:dxCalendarOptions.calendarType]
+    
+     */
+    @Input()
+    get calendarType(): string {
+        return this._getOption('calendarType');
+    }
+    set calendarType(value: string) {
+        this._setOption('calendarType', value);
+    }
+
+
+    /**
      * [descr:dxCalendarOptions.cellTemplate]
     
      */

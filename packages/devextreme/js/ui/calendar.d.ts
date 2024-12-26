@@ -102,6 +102,12 @@ export interface dxCalendarOptions extends EditorOptions<dxCalendar> {
     activeStateEnabled?: boolean;
     /**
      * @docid
+     * @default null
+     * @public
+     */
+    calendarType?: string;
+    /**
+     * @docid
      * @default "cell"
      * @type_function_param1 itemData:object
      * @type_function_return string|Element|jQuery

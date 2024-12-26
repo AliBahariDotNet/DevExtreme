@@ -15,7 +15,7 @@ import windowResizeCallbacks from '@js/core/utils/resize_callbacks';
 import { addShadowDomStyles } from '@js/core/utils/shadow_dom';
 import { isDefined, isFunction, isString } from '@js/core/utils/type';
 import { hasWindow } from '@js/core/utils/window';
-import license, { peekValidationPerformed } from '@ts/core/license/license_validation';
+// import license, { peekValidationPerformed } from '@ts/core/license/license_validation';
 import TemplateManagerModule from '@ts/core/m_template_manager';
 
 import { Component } from './component';
@@ -92,12 +92,12 @@ class DOMComponent<
     attachInstanceToElement(this._$element, this, this._dispose);
 
     super.ctor(options);
-    const validationAlreadyPerformed = peekValidationPerformed();
-    // @ts-expect-error
-    license.validateLicense(config().licenseKey);
-    if (!validationAlreadyPerformed && peekValidationPerformed()) {
-      config({ licenseKey: '' });
-    }
+    //const validationAlreadyPerformed = peekValidationPerformed();
+    // @_ts-expect-error
+    //license.validateLicense(config().licenseKey);
+    //if (!validationAlreadyPerformed && peekValidationPerformed()) {
+    //  config({ licenseKey: '' });
+    //}
   }
 
   _createElement(element: Element): void {
