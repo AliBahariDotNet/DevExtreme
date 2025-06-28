@@ -130,7 +130,7 @@ const dateUtils = {
     each(formatInfo.components, function () {
       // @ts-expect-error
       const componentInfo = dateUtils.DATE_COMPONENTS_INFO[this];
-      result[componentInfo.setter](newValue[componentInfo.getter]());
+      componentInfo.setter(result, componentInfo.getter(newValue));
     });
 
     return result;
@@ -185,8 +185,8 @@ const dateUtils = {
 // @ts-expect-error
 dateUtils.DATE_COMPONENTS_INFO = {
   year: {
-    getter: 'getFullYear',
-    setter: 'setFullYear',
+    getter: (value) => value.getFullYear(),
+    setter: (date, value) => date.setFullYear(value),
     formatter(value, date) {
       const formatDate = new Date(date.getTime());
       formatDate.setFullYear(value);
@@ -197,8 +197,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   day: {
-    getter: 'getDate',
-    setter: 'setDate',
+    getter: (value) => value.getDate(),
+    setter: (date, value) => date.setDate(value),
     formatter(value, date) {
       const formatDate = new Date(date.getTime());
       formatDate.setDate(value);
@@ -209,8 +209,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   month: {
-    getter: 'getMonth',
-    setter: 'setMonth',
+    getter: (value) => value.getMonth(),
+    setter: (date, value) => date.setMonth(value),
     formatter(value) {
       return dateLocalization.getMonthNames()[value];
     },
@@ -219,8 +219,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   hours: {
-    getter: 'getHours',
-    setter: 'setHours',
+    getter: (value) => value.getHours(),
+    setter: (date, value) => date.setHours(value),
     formatter(value) {
       return dateLocalization.format(new Date(0, 0, 0, value), 'hour');
     },
@@ -229,8 +229,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   minutes: {
-    getter: 'getMinutes',
-    setter: 'setMinutes',
+    getter: (value) => value.getMinutes(),
+    setter: (date, value) => date.setMinutes(value),
     formatter(value) {
       return dateLocalization.format(new Date(0, 0, 0, 0, value), 'minute');
     },
@@ -239,8 +239,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   seconds: {
-    getter: 'getSeconds',
-    setter: 'setSeconds',
+    getter: (value) => value.getSeconds(),
+    setter: (date, value) => date.setSeconds(value),
     formatter(value) {
       return dateLocalization.format(new Date(0, 0, 0, 0, 0, value), 'second');
     },
@@ -249,8 +249,8 @@ dateUtils.DATE_COMPONENTS_INFO = {
   },
 
   milliseconds: {
-    getter: 'getMilliseconds',
-    setter: 'setMilliseconds',
+    getter: (value) => value.getMilliseconds(),
+    setter: (date, value) => date.setMilliseconds(value),
     formatter(value) {
       return dateLocalization.format(new Date(0, 0, 0, 0, 0, 0, value), 'millisecond');
     },

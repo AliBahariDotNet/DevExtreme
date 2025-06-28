@@ -110,6 +110,7 @@ type AccessibleOptions = Pick<Properties,
   "applyValueMode" |
   "buttons" |
   "calendarOptions" |
+  'calendarType' |
   "cancelButtonText" |
   "dateOutOfRangeMessage" |
   "dateSerializationFormat" |
@@ -193,6 +194,7 @@ const componentConfig = {
     applyValueMode: String as PropType<ApplyValueMode>,
     buttons: Array as PropType<Array<DropDownPredefinedButton | TextEditorButton>>,
     calendarOptions: Object as PropType<dxCalendarOptions | Record<string, any>>,
+    calendarType: String,
     cancelButtonText: String,
     dateOutOfRangeMessage: String,
     dateSerializationFormat: String,
@@ -272,6 +274,7 @@ const componentConfig = {
     "update:applyValueMode": null,
     "update:buttons": null,
     "update:calendarOptions": null,
+    "update:calendarType": null,
     "update:cancelButtonText": null,
     "update:dateOutOfRangeMessage": null,
     "update:dateSerializationFormat": null,
