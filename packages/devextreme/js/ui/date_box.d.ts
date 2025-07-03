@@ -309,6 +309,12 @@ export interface DateBoxBaseOptions<TComponent> extends dxDropDownEditorOptions<
     calendarOptions?: dxCalendarOptions;
     /**
      * @docid
+     * @default null
+     * @public
+     */
+    calendarType?: string | null;
+    /**
+     * @docid
      * @default "Cancel"
      * @public
      */

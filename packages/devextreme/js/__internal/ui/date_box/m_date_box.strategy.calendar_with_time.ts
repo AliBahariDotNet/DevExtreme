@@ -51,8 +51,7 @@ class CalendarWithTimeStrategy extends CalendarStrategy {
   }
 
   _is24HourFormat() {
-    // @ts-expect-error
-    return dateLocalization.is24HourFormat(this.getDisplayFormat(this.dateBox.option('displayFormat')));
+    return (this.dateBox._getDateUtils() || dateLocalization).is24HourFormat(this.getDisplayFormat(this.dateBox.option('displayFormat')));
   }
 
   _getContouredValue() {
@@ -69,6 +68,7 @@ class CalendarWithTimeStrategy extends CalendarStrategy {
       use24HourFormat: this._is24HourFormat(),
       onValueChanged: this._valueChangedHandler.bind(this),
       stylingMode: this.dateBox.option('stylingMode'),
+      calendarType: this._getCalendarType(),
     });
   }
 
