@@ -12,6 +12,7 @@ import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
 import { noop } from '@js/core/utils/common';
 import coreDateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import type { CalendarSelectionMode, CalendarZoomLevel, DisabledDate } from '@js/ui/calendar';
 import type { OptionChanged } from '@ts/core/widget/types';
@@ -83,6 +84,8 @@ export interface BaseViewProperties extends Properties {
   range: Date[];
 
   hoveredRange: Date[];
+
+  calendarType?: string;
 }
 
 class BaseView<
@@ -112,7 +115,11 @@ class BaseView<
 
   _$rangeStartHoverCell!: dxElementWrapper;
 
-  _$selectedCells!: dxElementWrapper;
+  _$selectedCells!: dxElementWrapper;  
+  
+  dateUtils: any;
+
+  dateLocalization: any;
 
   // eslint-disable-next-line class-methods-use-this
   _getViewName(): string {
@@ -137,6 +144,15 @@ class BaseView<
   }
 
   _initMarkup(): void {
+    const { calendarType } = this.option();
+    if (calendarType === 'persian') {
+      this.dateUtils = persianDateUtils;
+      this.dateLocalization = persianDateUtils;
+    } else {
+      this.dateUtils = coreDateUtils;
+      this.dateLocalization = dateLocalization;
+    }
+
     super._initMarkup();
 
     this._renderImpl();
@@ -165,8 +181,7 @@ class BaseView<
     const { value } = this.option();
 
     const localizedWidgetName = this._getLocalizedWidgetName();
-    // @ts-expect-error
-    const formattedDate = dateLocalization.format(value, ARIA_LABEL_DATE_FORMAT);
+    const formattedDate = this.dateLocalization.format(value, ARIA_LABEL_DATE_FORMAT);
     // @ts-expect-error ts-error
     const selectedDatesText = messageLocalization.format('dxCalendar-selectedDate', formattedDate);
 
@@ -182,8 +197,8 @@ class BaseView<
     // @ts-expect-error ts-error
     const [startDate, endDate] = value;
 
-    const formattedStartDate = dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
-    const formattedEndDate = dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedStartDate = this.dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedEndDate = this.dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
 
     const selectedDatesText = startDate && endDate
       // @ts-expect-error ts-error
@@ -654,7 +669,7 @@ class BaseView<
     const format = this._getCurrentDateFormat();
 
     const dateRangeText = format
-      ? dateLocalization.format(date, format)
+      ? this.dateLocalization.format(date, format)
       : this._getCellText(date);
 
     const ariaLabel = isToday

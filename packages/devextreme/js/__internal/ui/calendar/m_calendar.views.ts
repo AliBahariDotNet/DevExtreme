@@ -4,11 +4,11 @@ import dateLocalization from '@js/common/core/localization/date';
 import domAdapter from '@js/core/dom_adapter';
 import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
-import dateUtils from '@js/core/utils/date';
 import dateSerialization from '@js/core/utils/date_serialization';
 import type {
   CalendarSelectionMode, CellTemplateData, FirstDayOfWeek, WeekNumberRule,
 } from '@js/ui/calendar';
+import { isDefined } from '@js/core/utils/type';
 
 import type { BaseViewProperties } from './m_calendar.base_view';
 import BaseView from './m_calendar.base_view';
@@ -154,47 +154,47 @@ export class MonthView extends BaseView<MonthViewProperties> {
     const { weekNumberRule, firstDayOfWeek } = this.option();
 
     if (weekNumberRule === 'auto') {
-      return dateUtils.getWeekNumber(date, firstDayOfWeek, firstDayOfWeek === 1 ? 'firstFourDays' : 'firstDay');
+      return this.dateUtils.getWeekNumber(date, firstDayOfWeek, firstDayOfWeek === 1 ? 'firstFourDays' : 'firstDay');
     }
 
-    return dateUtils.getWeekNumber(date, firstDayOfWeek, weekNumberRule);
+    return this.dateUtils.getWeekNumber(date, firstDayOfWeek, weekNumberRule);
   }
 
   getNavigatorCaption() {
     const { date } = this.option();
 
-    return dateLocalization.format(date, 'monthandyear');
+    return this.dateLocalization.format(date, 'monthandyear');
   }
 
   _isTodayCell(cellDate): boolean {
     const { _todayDate: today } = this.option();
 
-    return dateUtils.sameDate(cellDate, today());
+    return this.dateUtils.sameDate(cellDate, today());
   }
 
   _isDateOutOfRange(cellDate) {
     const minDate = this.option('min');
     const maxDate = this.option('max');
 
-    return !dateUtils.dateInRange(cellDate, minDate, maxDate, 'date');
+    return !this.dateUtils.dateInRange(cellDate, minDate, maxDate, 'date');
   }
 
   _isOtherView(cellDate): boolean {
     const { date } = this.option();
 
-    return cellDate.getMonth() !== date.getMonth();
+    return !this.dateUtils.sameMonthAndYear(cellDate, date);
   }
 
   _isStartDayOfMonth(cellDate) {
-    return dateUtils.sameDate(cellDate, dateUtils.getFirstMonthDate(this.option('date')));
+    return this.dateUtils.sameDate(cellDate, this.dateUtils.getFirstMonthDate(this.option('date')));
   }
 
   _isEndDayOfMonth(cellDate) {
-    return dateUtils.sameDate(cellDate, dateUtils.getLastMonthDate(this.option('date')));
+    return this.dateUtils.sameDate(cellDate, this.dateUtils.getLastMonthDate(this.option('date')));
   }
 
   _getCellText(cellDate) {
-    return dateLocalization.format(cellDate, 'd');
+    return this.dateLocalization.format(cellDate, 'd');
   }
 
   _getDayCaption(day) {
@@ -202,24 +202,21 @@ export class MonthView extends BaseView<MonthViewProperties> {
     const dayIndex = day % daysInWeek;
 
     return {
-      full: dateLocalization.getDayNames()[dayIndex],
-      abbreviated: dateLocalization.getDayNames('abbreviated')[dayIndex],
+      full: this.dateLocalization.getDayNames()[dayIndex],
+      abbreviated: this.dateLocalization.getDayNames('abbreviated')[dayIndex],
     };
   }
 
   _getFirstCellData() {
-    const { firstDayOfWeek } = this.option();
+    const firstDay = this.dateUtils.getFirstMonthDate(this.option('date'));
 
-    const firstDay = dateUtils.getFirstMonthDate(this.option('date'));
-    // @ts-expect-error ts-error
-    let firstMonthDayOffset = firstDayOfWeek - firstDay.getDay();
+    let firstMonthDayOffset = this._getFirstDayOfWeek() - firstDay.getDay();
     const { colCount: daysInWeek } = this.option();
 
-    if (firstMonthDayOffset >= 0) {
+    if (firstMonthDayOffset > 0) {
       firstMonthDayOffset -= daysInWeek;
     }
 
-    // @ts-expect-error ts-error
     firstDay.setDate(firstDay.getDate() + firstMonthDayOffset);
     return firstDay;
   }
@@ -230,15 +227,20 @@ export class MonthView extends BaseView<MonthViewProperties> {
     return date;
   }
 
+  _getFirstDayOfWeek() {
+      return isDefined(this.option('firstDayOfWeek')) ? this.option('firstDayOfWeek') : this.dateLocalization.firstDayOfWeekIndex();
+  }
+
   _getCellByDate(date) {
-    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(date, dateUtils.getShortDateFormat())}']`);
+    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(date, this.dateUtils.getShortDateFormat())}']`);
   }
 
   isBoundary(date) {
-    return dateUtils.sameMonthAndYear(date, this.option('min')) || dateUtils.sameMonthAndYear(date, this.option('max'));
+    return this.dateUtils.sameMonthAndYear(date, this.option('min')) || this.dateUtils.sameMonthAndYear(date, this.option('max'));
   }
 
   _getDefaultDisabledDatesHandler(disabledDates) {
+    const dateUtils = this.dateUtils;
     // @ts-expect-error
     return function (args) {
       const isDisabledDate = disabledDates.some((item) => dateUtils.sameDate(item, args.date));
@@ -262,11 +264,11 @@ export class YearView extends BaseView {
   _isTodayCell(cellDate) {
     const { _todayDate: today } = this.option();
 
-    return dateUtils.sameMonthAndYear(cellDate, today());
+    return this.dateUtils.sameMonthAndYear(cellDate, today());
   }
 
   _isDateOutOfRange(cellDate) {
-    return !dateUtils.dateInRange(cellDate, dateUtils.getFirstMonthDate(this.option('min')), dateUtils.getLastMonthDate(this.option('max')));
+    return !this.dateUtils.dateInRange(cellDate, this.dateUtils.getFirstMonthDate(this.option('min')), this.dateUtils.getLastMonthDate(this.option('max')));
   }
 
   _isOtherView() {
@@ -283,40 +285,30 @@ export class YearView extends BaseView {
 
   // eslint-disable-next-line class-methods-use-this
   _getCellText(cellDate): string {
-    return dateLocalization.getMonthNames('abbreviated')[cellDate.getMonth()];
+    return this.dateLocalization.getMonthNames('abbreviated')[this.dateUtils.getMonth(cellDate)];
   }
 
   _getFirstCellData(): Date {
-    const { date: currentDate } = this.option();
-    const data = new Date(currentDate);
-
-    data.setDate(1);
-    data.setMonth(0);
-
-    return data;
+    return this.dateUtils.getFirstMonthDateInYear(this.option('date'));
   }
 
   _getNextCellData(date) {
-    date = new Date(date);
-    date.setMonth(date.getMonth() + 1);
-    return date;
+    return this.dateUtils.getNextMonthDate(date);
   }
 
   _getCellByDate(date) {
-    const foundDate = new Date(date);
-    foundDate.setDate(1);
-
-    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, dateUtils.getShortDateFormat())}']`);
+    const foundDate = this.dateUtils.getFirstMonthDate(date);
+    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, this.dateUtils.getShortDateFormat())}']`);
   }
 
   getNavigatorCaption(): string | Date | undefined {
     const { date } = this.option();
 
-    return dateLocalization.format(date, 'yyyy');
+    return this.dateLocalization.format(date, 'yyyy');
   }
 
   isBoundary(date) {
-    return dateUtils.sameYear(date, this.option('min')) || dateUtils.sameYear(date, this.option('max'));
+    return this.dateUtils.sameYear(date, this.option('min')) || this.dateUtils.sameYear(date, this.option('max'));
   }
 
   _renderWeekNumberCell() {}
@@ -330,21 +322,15 @@ export class DecadeView extends BaseView {
   _isTodayCell(cellDate) {
     const { _todayDate: today } = this.option();
 
-    return dateUtils.sameYear(cellDate, today());
+    return this.dateUtils.sameYear(cellDate, today());
   }
 
   _isDateOutOfRange(cellDate): boolean {
-    const min = this.option('min');
-    const max = this.option('max');
-    // @ts-expect-error ts-error
-    return !dateUtils.dateInRange(cellDate.getFullYear(), min?.getFullYear(), max?.getFullYear());
+    return !this.dateUtils.dateInRange(cellDate, this.dateUtils.getFirstMonthDateInYear(this.option('min')), this.dateUtils.getLastMonthDateInYear(this.option('max')));
   }
 
   _isOtherView(cellDate) {
-    const date = new Date(cellDate);
-    date.setMonth(1);
-
-    return !dateUtils.sameDecade(date, this.option('date'));
+    return !this.dateUtils.sameDecade(cellDate, this.option('date'));
   }
 
   _isStartDayOfMonth() {
@@ -356,46 +342,39 @@ export class DecadeView extends BaseView {
   }
 
   _getCellText(cellDate) {
-    return dateLocalization.format(cellDate, 'yyyy');
+    return this.dateLocalization.format(cellDate, 'yyyy');
   }
 
   _getFirstCellData() {
-    const year = dateUtils.getFirstYearInDecade(this.option('date')) - 1;
-    return dateUtils.createDateWithFullYear(year, 0, 1);
+    const year = this.dateUtils.getFirstYearInDecade(this.option('date')) - 1;
+    return this.dateUtils.createDateWithFullYear(year, 0, 1);
   }
 
   _getNextCellData(date): Date {
-    date = new Date(date);
-    date.setFullYear(date.getFullYear() + 1);
-    return date;
+    return this.dateUtils.getNextYearDate(date);
   }
 
   getNavigatorCaption(): string {
     const { date: currentDate } = this.option();
-    const firstYearInDecade = dateUtils.getFirstYearInDecade(currentDate);
-    const startDate = new Date(currentDate);
-    const endDate = new Date(currentDate);
+    const firstYearInDecade = this.dateUtils.getFirstYearInDecade(currentDate);
+    const startDate = this.dateUtils.createDateWithFullYear(firstYearInDecade, 0, 1);
+    const endDate = this.dateUtils.createDateWithFullYear(firstYearInDecade + 9, 0, 1);
 
-    startDate.setFullYear(firstYearInDecade);
-    endDate.setFullYear(firstYearInDecade + 9);
-
-    return `${dateLocalization.format(startDate, 'yyyy')}-${dateLocalization.format(endDate, 'yyyy')}`;
+    return `${this.dateLocalization.format(startDate, 'yyyy')}-${this.dateLocalization.format(endDate, 'yyyy')}`;
   }
 
   _isValueOnCurrentView(currentDate, value) {
-    return dateUtils.sameDecade(currentDate, value);
+    return this.dateUtils.sameDecade(currentDate, value);
   }
 
   _getCellByDate(date) {
-    const foundDate = new Date(date);
-    foundDate.setDate(1);
-    foundDate.setMonth(0);
+    const foundDate = this.dateUtils.getFirstMonthDateInYear(date);
 
-    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, dateUtils.getShortDateFormat())}']`);
+    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, this.dateUtils.getShortDateFormat())}']`);
   }
 
   isBoundary(date) {
-    return dateUtils.sameDecade(date, this.option('min')) || dateUtils.sameDecade(date, this.option('max'));
+    return this.dateUtils.sameDecade(date, this.option('min')) || this.dateUtils.sameDecade(date, this.option('max'));
   }
 
   _renderWeekNumberCell() {}
@@ -409,22 +388,19 @@ export class CenturyView extends BaseView {
   _isTodayCell(cellDate) {
     const { _todayDate: today } = this.option();
 
-    return dateUtils.sameDecade(cellDate, today());
+    return this.dateUtils.sameDecade(cellDate, today());
   }
 
   _isDateOutOfRange(cellDate) {
-    const decade = dateUtils.getFirstYearInDecade(cellDate);
-    const minDecade = dateUtils.getFirstYearInDecade(this.option('min'));
-    const maxDecade = dateUtils.getFirstYearInDecade(this.option('max'));
+    const decade = this.dateUtils.getFirstYearInDecade(cellDate);
+    const minDecade = this.dateUtils.getFirstYearInDecade(this.option('min'));
+    const maxDecade = this.dateUtils.getFirstYearInDecade(this.option('max'));
 
-    return !dateUtils.dateInRange(decade, minDecade, maxDecade);
+    return !this.dateUtils.dateInRange(decade, minDecade, maxDecade);
   }
 
   _isOtherView(cellDate) {
-    const date = new Date(cellDate);
-    date.setMonth(1);
-
-    return !dateUtils.sameCentury(date, this.option('date'));
+    return !this.dateUtils.sameCentury(cellDate, this.option('date'));
   }
 
   _isStartDayOfMonth() {
@@ -436,48 +412,42 @@ export class CenturyView extends BaseView {
   }
 
   _getCellText(cellDate): string {
-    const startDate = dateLocalization.format(cellDate, 'yyyy');
-    const endDate = new Date(cellDate);
+    const startDate = this.dateLocalization.format(cellDate, 'yyyy');
+    const endDate = this.dateUtils.createDateWithFullYear(this.dateUtils.getYear(cellDate) + 9, 0, 1);
 
-    endDate.setFullYear(endDate.getFullYear() + 9);
-
-    return `${startDate} - ${dateLocalization.format(endDate, 'yyyy')}`;
+    return `${startDate} - ${this.dateLocalization.format(endDate, 'yyyy')}`;
   }
 
   _getFirstCellData() {
-    const decade = dateUtils.getFirstDecadeInCentury(this.option('date')) - 10;
-    return dateUtils.createDateWithFullYear(decade, 0, 1);
+    const decade = this.dateUtils.getFirstDecadeInCentury(this.option('date')) - 10;
+    return this.dateUtils.createDateWithFullYear(decade, 0, 1);
   }
 
   _getNextCellData(date) {
-    date = new Date(date);
-    date.setFullYear(date.getFullYear() + 10);
-    return date;
+    return this.dateUtils.getNextDecadeDate(date);
   }
 
   _getCellByDate(date) {
-    const foundDate = new Date(date);
-    foundDate.setDate(1);
-    foundDate.setMonth(0);
-    foundDate.setFullYear(dateUtils.getFirstYearInDecade(foundDate));
+    let foundDate;
+    if(isDefined(date)) {
+        const year = this.dateUtils.getFirstYearInDecade(date);
+        foundDate = this.dateUtils.createDateWithFullYear(year, 0, 1);
+    }
 
-    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, dateUtils.getShortDateFormat())}']`);
+    return this._$table.find(`td[data-value='${dateSerialization.serializeDate(foundDate, this.dateUtils.getShortDateFormat())}']`);
   }
 
   getNavigatorCaption(): string {
     const { date: currentDate } = this.option();
-    const firstDecadeInCentury = dateUtils.getFirstDecadeInCentury(currentDate);
-    const startDate = new Date(currentDate);
-    const endDate = new Date(currentDate);
+    const firstDecadeInCentury = this.dateUtils.getFirstDecadeInCentury(currentDate);
+    const startDate = this.dateUtils.createDateWithFullYear(firstDecadeInCentury, 0, 1);
+    const endDate = this.dateUtils.createDateWithFullYear(firstDecadeInCentury + 99, 0, 1);
 
-    startDate.setFullYear(firstDecadeInCentury);
-    endDate.setFullYear(firstDecadeInCentury + 99);
-
-    return `${dateLocalization.format(startDate, 'yyyy')}-${dateLocalization.format(endDate, 'yyyy')}`;
+    return `${this.dateLocalization.format(startDate, 'yyyy')}-${this.dateLocalization.format(endDate, 'yyyy')}`;
   }
 
   isBoundary(date) {
-    return dateUtils.sameCentury(date, this.option('min')) || dateUtils.sameCentury(date, this.option('max'));
+    return this.dateUtils.sameCentury(date, this.option('min')) || this.dateUtils.sameCentury(date, this.option('max'));
   }
 
   _renderWeekNumberCell(): void {}
