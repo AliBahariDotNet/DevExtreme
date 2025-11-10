@@ -15,7 +15,7 @@ Declarations.discover({
   args: {
     artifacts: PATHS.artifactsDir,
     sources: resolve('../devextreme/js'),
-    exclude: /js\/(renovation|__internal|.eslintrc.js)/,
+    exclude: /js\/(renovation|__internal|.eslintrc.js|core\/utils\/moment\/moment.js|core\/utils\/moment\/locale\/fa.js|core\/utils\/jalali-moment\/jalali-moment.js)/,
     compilerOptions: {
       typeRoots: [],
     },
