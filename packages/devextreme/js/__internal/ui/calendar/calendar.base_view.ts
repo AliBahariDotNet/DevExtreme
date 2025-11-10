@@ -11,6 +11,7 @@ import { data as elementData } from '@js/core/element_data';
 import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
 import coreDateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import type { DxEvent } from '@js/events';
 import type {
@@ -108,6 +109,8 @@ export interface BaseViewProperties extends WidgetProperties {
   onCellClick?: (e: CellEvent) => void;
   onCellHover?: (e: CellEvent) => void;
   onWeekNumberClick?: (e: WeekNumberClickEvent) => void;
+
+  calendarType?: string;
 }
 
 class BaseView<
@@ -139,6 +142,10 @@ class BaseView<
 
   _$selectedCells!: dxElementWrapper[];
 
+  dateUtils: any;
+
+  dateLocalization: any;
+
   _getViewName(): string {
     return 'base';
   }
@@ -161,6 +168,15 @@ class BaseView<
   }
 
   _initMarkup(): void {
+    const { calendarType } = this.option();
+    if (calendarType === 'persian') {
+      this.dateUtils = persianDateUtils;
+      this.dateLocalization = persianDateUtils;
+    } else {
+      this.dateUtils = coreDateUtils;
+      this.dateLocalization = dateLocalization;
+    }
+
     super._initMarkup();
 
     this._renderImpl();
@@ -188,7 +204,7 @@ class BaseView<
     const { value } = this.option();
 
     const localizedWidgetName = this._getLocalizedWidgetName();
-    const formattedDate = dateLocalization
+    const formattedDate = this.dateLocalization
       .format(value as Date | undefined, ARIA_LABEL_DATE_FORMAT);
     // @ts-expect-error ts-error
     const selectedDatesText = messageLocalization.format('dxCalendar-selectedDate', formattedDate);
@@ -204,8 +220,8 @@ class BaseView<
     const localizedWidgetName = this._getLocalizedWidgetName();
     const [startDate, endDate] = value as [Date, Date];
 
-    const formattedStartDate = dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
-    const formattedEndDate = dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedStartDate = this.dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedEndDate = this.dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
 
     const selectedDatesText = startDate && endDate
       // @ts-expect-error ts-error
@@ -230,7 +246,7 @@ class BaseView<
   _getMultipleRangesText(): string {
     const { value } = this.option();
     const rangeValue = value as Date[];
-    const ranges = coreDateUtils.getRangesByDates(rangeValue.map((date) => new Date(date)));
+    const ranges = this.dateUtils.getRangesByDates(rangeValue.map((date) => new Date(date)));
 
     if (ranges.length > 2) {
       // @ts-expect-error ts-error
@@ -252,8 +268,8 @@ class BaseView<
   _getRangeText(range: [Date | undefined, Date | undefined]): string {
     const [startDate, endDate] = range;
 
-    const formattedStartDate = dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
-    const formattedEndDate = dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedStartDate = this.dateLocalization.format(startDate, ARIA_LABEL_DATE_FORMAT);
+    const formattedEndDate = this.dateLocalization.format(endDate, ARIA_LABEL_DATE_FORMAT);
 
     const selectedDatesText = startDate && endDate
       // @ts-expect-error ts-error
@@ -338,7 +354,7 @@ class BaseView<
 
     cell.className = this._getClassNameByDate(cellDate, cellIndex);
 
-    cell.setAttribute('data-value', dateSerialization.serializeDate(cellDate, coreDateUtils.getShortDateFormat()));
+    cell.setAttribute('data-value', dateSerialization.serializeDate(cellDate, this.dateUtils.getShortDateFormat()));
     elementData(cell, CALENDAR_DATE_VALUE_KEY, cellDate);
 
     this.setAria({
@@ -358,7 +374,7 @@ class BaseView<
 
     // T425127
     if (prevCellDate) {
-      coreDateUtils.fixTimezoneGap(prevCellDate, cellDate);
+      this.dateUtils.fixTimezoneGap(prevCellDate, cellDate);
     }
 
     params.prevCellDate = cellDate;
@@ -481,15 +497,14 @@ class BaseView<
         const firstDateInRow = $row.find(`.${CALENDAR_CELL_CLASS}`).first().data(CALENDAR_DATE_VALUE_KEY);
         const lastDateInRow = $row.find(`.${CALENDAR_CELL_CLASS}`).last().data(CALENDAR_DATE_VALUE_KEY) ;
         const rowDates = [
-          ...coreDateUtils.getDatesOfInterval(firstDateInRow, lastDateInRow, DAY_INTERVAL),
+          ...this.dateUtils.getDatesOfInterval(firstDateInRow, lastDateInRow, DAY_INTERVAL),
           lastDateInRow,
         ];
 
         this._weekNumberCellClickAction({
           event: e,
-          // @ts-expect-error ts-error
           rowDates,
-        });
+        } as WeekNumberClickEvent);
       });
     }
   }
@@ -689,7 +704,7 @@ class BaseView<
     const format = this._getCurrentDateFormat();
 
     const dateRangeText = format
-      ? `${dateLocalization.format(date, format)}`
+      ? `${this.dateLocalization.format(date, format)}`
       : this._getCellText(date);
 
     const ariaLabel = isToday
@@ -701,7 +716,7 @@ class BaseView<
 
   _getFirstAvailableDate(): Date {
     const { date, min } = this.option();
-    const firstAvailableDate = coreDateUtils.getViewFirstCellDate(
+    const firstAvailableDate = this.dateUtils.getViewFirstCellDate(
       this._getViewName(),
       date,
     ) ?? date;

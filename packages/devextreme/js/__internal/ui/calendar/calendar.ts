@@ -14,6 +14,7 @@ import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
 import { FunctionTemplate } from '@js/core/templates/function_template';
 import dateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import { inRange, sign } from '@js/core/utils/math';
 import { getWidth } from '@js/core/utils/size';
@@ -184,6 +185,8 @@ class Calendar<
       onContouredChanged: null,
       skipFocusCheck: false,
 
+      calendarType: null,
+
       _todayDate: () => new Date(),
     };
   }
@@ -254,9 +257,10 @@ class Calendar<
           return;
         }
 
-        const date = dateUtils.sameView(zoomLevel, currentDate, min)
+        const _dateUtils = this._getDateUtils() || dateUtils;
+        const date = _dateUtils.sameView(zoomLevel, currentDate, min)
           ? min
-          : dateUtils.getViewFirstCellDate(zoomLevel, currentDate);
+          : _dateUtils.getViewFirstCellDate(zoomLevel, currentDate);
 
         this._moveToClosestAvailableDate(date);
       },
@@ -271,9 +275,10 @@ class Calendar<
           return;
         }
 
-        const date = dateUtils.sameView(zoomLevel, currentDate, max)
+        const _dateUtils = this._getDateUtils() || dateUtils;
+        const date = _dateUtils.sameView(zoomLevel, currentDate, max)
           ? max
-          : dateUtils.getViewLastCellDate(zoomLevel, currentDate);
+          : _dateUtils.getViewLastCellDate(zoomLevel, currentDate);
 
         this._moveToClosestAvailableDate(date);
       },
@@ -377,6 +382,9 @@ class Calendar<
   }
 
   _shiftDate(zoomLevel: CalendarZoomLevel, date: Date, offset: number, reverse: number): void {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.shiftDate(zoomLevel, date, offset, reverse); }
+
     switch (zoomLevel) {
       case ZOOM_LEVEL.MONTH:
         date.setDate(date.getDate() + offset * reverse);
@@ -457,6 +465,9 @@ class Calendar<
   }
 
   _areDatesInSameView(zoomLevel: CalendarZoomLevel, date1: Date, date2: Date): boolean {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.areDatesInSameView(zoomLevel, date1, date2); }
+
     switch (zoomLevel) {
       case ZOOM_LEVEL.YEAR:
         return date1.getFullYear() === date2.getFullYear();
@@ -471,6 +482,9 @@ class Calendar<
   }
 
   _areDatesInNeighborView(zoomLevel: CalendarZoomLevel, date1: Date, date2: Date): boolean {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.areDatesInNeighborView(zoomLevel, date1, date2); }
+
     const monthMinDistance = (a: number, b: number): number => {
       const abs = Math.abs(a - b);
       return Math.min(abs, 12 - abs);
@@ -761,11 +775,17 @@ class Calendar<
         break;
     }
 
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getViewsOffset(startDate, endDate, zoomCorrection); }
+
     return Math.floor(endDate.getFullYear() / zoomCorrection)
       - Math.floor(startDate.getFullYear() / zoomCorrection);
   }
 
   _getMonthsOffset(startDate: Date, endDate: Date): number {
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getMonthsOffset(startDate, endDate); }
+
     const yearOffset = endDate.getFullYear() - startDate.getFullYear();
     const monthOffset = endDate.getMonth() - startDate.getMonth();
 
@@ -798,6 +818,9 @@ class Calendar<
   _getDateByOffset(offset: number, initialDate?: DateLike): Date {
     const { currentDate = new Date() } = this.option();
     const date = this._getDate(initialDate ?? currentDate);
+
+    const _dateUtils = this._getDateUtils();
+    if (isDefined(_dateUtils)) { return _dateUtils.getDateByOffset(offset, date, this.option('zoomLevel')); }
 
     const currentDay = date.getDate();
     const difference = dateUtils.getDifferenceInMonth(this.option('zoomLevel')) * offset;
@@ -966,6 +989,7 @@ class Calendar<
       cellTemplate: this._getTemplateByOption('cellTemplate'),
       allowValueSelection: this._isMaxZoomLevel(),
       _todayDate: todayDate,
+      calendarType: this._getCalendarType(),
     };
   }
 
@@ -989,8 +1013,9 @@ class Calendar<
 
   _isViewAvailable(date: Date): boolean {
     const { zoomLevel } = this.option();
-    const min = dateUtils.getViewMinBoundaryDate(zoomLevel, this._getMinDate());
-    const max = dateUtils.getViewMaxBoundaryDate(zoomLevel, this._getMaxDate());
+    const _dateUtils = this._getDateUtils() || dateUtils;
+    const min = _dateUtils.getViewMinBoundaryDate(zoomLevel, this._getMinDate());
+    const max = _dateUtils.getViewMaxBoundaryDate(zoomLevel, this._getMaxDate());
 
     return dateUtils.dateInRange(date, min, max);
   }
@@ -1151,8 +1176,8 @@ class Calendar<
     const min = this._getMinDate();
     const max = this._getMaxDate();
     const { minZoomLevel } = this.option();
-
-    return !!dateUtils.sameView(zoomLevel, min, max) || minZoomLevel === zoomLevel;
+    const _dateUtils = this._getDateUtils() || dateUtils;
+    return !!_dateUtils.sameView(zoomLevel, min, max) || minZoomLevel === zoomLevel;
   }
 
   _updateButtonsVisibility(): void {
@@ -1795,6 +1820,9 @@ class Calendar<
       case 'weekNumberRule':
         this._refreshViews();
         break;
+      case 'calendarType':
+        this._invalidate();
+        break;
       default:
         super._optionChanged(args);
     }
@@ -1804,6 +1832,19 @@ class Calendar<
     const { contouredDate } = this._view.option();
 
     return contouredDate;
+  }
+
+  _getCalendarType(): any {
+    return this.option('calendarType') || '';
+  }
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
+    }
   }
 }
 

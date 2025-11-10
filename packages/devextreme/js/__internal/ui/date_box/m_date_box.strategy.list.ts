@@ -230,7 +230,7 @@ class ListStrategy extends DateBoxStrategy {
 
   _timeListItemTemplate(itemData) {
     const displayFormat = this.dateBox.option('displayFormat');
-    return dateLocalization.format(itemData, this.getDisplayFormat(displayFormat));
+    return (this._getDateUtils() || dateLocalization).format(itemData, this.getDisplayFormat(displayFormat));
   }
 
   _listItemClickHandler(e): void {
