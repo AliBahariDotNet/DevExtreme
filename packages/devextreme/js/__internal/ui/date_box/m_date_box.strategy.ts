@@ -2,6 +2,7 @@ import eventsEngine from '@js/common/core/events/core/events_engine';
 import dateLocalization from '@js/common/core/localization/date';
 import Class from '@js/core/class';
 import $ from '@js/core/renderer';
+import persianDateUtils from '@js/core/utils/date_persian';
 
 import type { PopupProperties } from '../popup/m_popup';
 
@@ -59,10 +60,9 @@ class DateBoxStrategy extends (Class.inherit({}) as new() => {}) {
   customizeButtons() {}
 
   getParsedText(text, format) {
-    // @ts-expect-error
-    const value = dateLocalization.parse(text, format);
-    // @ts-expect-error
-    return value || dateLocalization.parse(text);
+    const _dateLocalization = this._getDateUtils() || dateLocalization;
+    const value = _dateLocalization.parse(text, format);
+    return value || _dateLocalization.parse(text);
   }
 
   renderInputMinMax(): void {}
@@ -147,6 +147,19 @@ class DateBoxStrategy extends (Class.inherit({}) as new() => {}) {
       return this.dateBox.dateValue.apply(this.dateBox, arguments);
     }
     return this.dateBox.dateOption.apply(this.dateBox, ['value']);
+  }
+
+  _getCalendarType(): string {
+    return this.dateBox.option('calendarType') || '';
+  }
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
+    }
   }
 }
 

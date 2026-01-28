@@ -22,6 +22,7 @@ import {
 type AccessibleOptions = Pick<Properties,
   "accessKey" |
   "activeStateEnabled" |
+  "calendarType" |
   "cellTemplate" |
   "dateSerializationFormat" |
   "disabled" |
@@ -71,6 +72,7 @@ const componentConfig = {
   props: {
     accessKey: String,
     activeStateEnabled: Boolean,
+    calendarType: String,
     cellTemplate: {},
     dateSerializationFormat: String,
     disabled: Boolean,
@@ -116,6 +118,7 @@ const componentConfig = {
     "update:hoveredElement": null,
     "update:accessKey": null,
     "update:activeStateEnabled": null,
+    "update:calendarType": null,
     "update:cellTemplate": null,
     "update:dateSerializationFormat": null,
     "update:disabled": null,

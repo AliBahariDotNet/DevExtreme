@@ -270,7 +270,8 @@ class DateBoxMask extends DateBoxBase {
     if (isLDMLPattern) {
       this._formatPattern = format;
     } else {
-      this._formatPattern = getFormat((value) => dateLocalization.format(value, format));
+      const that = this;
+      this._formatPattern = getFormat((value) => numberLocalization.convertDigits((that._getDateUtils() || dateLocalization).format(value, format), true), this._getDateUtils());
     }
 
     return this._formatPattern;
@@ -324,7 +325,9 @@ class DateBoxMask extends DateBoxBase {
       return;
     }
 
-    const limits = this._getActivePartProp('limits')(this._maskValue);
+    const _dateUtils = this._getDateUtils();
+    const limits = !_dateUtils ? this._getActivePartProp('limits')(this._maskValue)
+      : _dateUtils.getDatePartLimits(this._getActivePartProp('pattern'), this._maskValue);
     const startString = this._searchValue + char.toLowerCase();
     const endLimit = limits.max - limits.min;
 
@@ -367,8 +370,7 @@ class DateBoxMask extends DateBoxBase {
   }
 
   _prepareRegExpInfo(): void {
-    // @ts-expect-error ts-error
-    this._regExpInfo = getRegExpInfo(this._getFormatPattern(), dateLocalization);
+    this._regExpInfo = getRegExpInfo(this._getFormatPattern() as string, this._getDateUtils() || dateLocalization);
     const { regexp } = this._regExpInfo;
     // @ts-expect-error ts-error
     const { source } = regexp;
@@ -503,12 +505,19 @@ class DateBoxMask extends DateBoxBase {
   }
 
   _getActivePartLimits(lockOtherParts?) {
+    const _dateUtils = this._getDateUtils();
+    if (_dateUtils) return _dateUtils.getDatePartLimits(this._getActivePartProp('pattern'), this._maskValue, lockOtherParts && this._getRealLimitsPattern());
+
     const limitFunction = this._getActivePartProp('limits');
     return limitFunction(this._maskValue, lockOtherParts && this._getRealLimitsPattern());
   }
 
   _getActivePartValue(dateValue?) {
     dateValue = dateValue || this._maskValue;
+
+    const _dateUtils = this._getDateUtils();
+    if (_dateUtils) return _dateUtils.getDatePartValue(dateValue, this._getActivePartProp('pattern'));
+
     const getter = this._getActivePartProp('getter');
     return isFunction(getter) ? getter(dateValue) : dateValue[getter]();
   }
@@ -530,7 +539,9 @@ class DateBoxMask extends DateBoxBase {
     value = inRange(value, limits.min, limits.max) ? value : value % 10;
     value = this._addLeadingZeroes(fitIntoRange(value, limits.min, limits.max));
 
-    isFunction(setter) ? setter(dateValue, value) : dateValue[setter](value);
+    const _dateUtils = this._getDateUtils();
+    if (_dateUtils) _dateUtils.setDatePartValue(dateValue, this._getActivePartProp('pattern'), value);
+    else isFunction(setter) ? setter(dateValue, value) : dateValue[setter](value);
     this._renderDisplayText(this._getDisplayedText(dateValue));
 
     this._renderDateParts();
@@ -629,7 +640,7 @@ class DateBoxMask extends DateBoxBase {
 
   _maskPasteHandler(e): void {
     const newText = this._replaceSelectedText(this.option('text'), this._caret(), clipboardText(e));
-    const date = dateLocalization.parse(newText, this._getFormatPattern());
+    const date = (this._getDateUtils() || dateLocalization).parse(newText, this._getFormatPattern());
 
     if (date && this._isDateValid(date)) {
       this._maskValue = date;

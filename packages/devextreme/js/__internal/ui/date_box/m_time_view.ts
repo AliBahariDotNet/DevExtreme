@@ -8,6 +8,7 @@ import type { EditorProperties } from '@ts/ui/editor/editor';
 import Editor from '@ts/ui/editor/editor';
 import SelectBox from '@ts/ui/m_select_box';
 import NumberBox from '@ts/ui/number_box/m_number_box';
+import persianDateUtils from '@js/core/utils/date_persian';
 
 import type { NumberBoxMaskProperties } from '../number_box/m_number_box.mask';
 import dateUtils from './m_date_utils';
@@ -35,6 +36,7 @@ export interface TimeViewProperties extends EditorProperties {
   use24HourFormat?: boolean;
   _showClock?: boolean;
   _arrowOffset?: number;
+  calendarType?: string;
 }
 
 class TimeView extends Editor<TimeViewProperties> {
@@ -127,7 +129,7 @@ class TimeView extends Editor<TimeViewProperties> {
   }
 
   _getBoxItems(is12HourFormat: boolean) {
-    const items = [{
+    let items = [{
       ratio: 0,
       shrink: 0,
       baseSize: 'auto',
@@ -144,6 +146,8 @@ class TimeView extends Editor<TimeViewProperties> {
       baseSize: 'auto',
       template: (): dxElementWrapper => this._minuteBox.$element(),
     }];
+
+    if (this.option('rtlEnabled')) items = items.reverse();
 
     if (is12HourFormat) {
       items.push({
@@ -248,8 +252,7 @@ class TimeView extends Editor<TimeViewProperties> {
   }
 
   _createFormat12Box(): void {
-    // @ts-expect-error ts-error
-    const periodNames = dateLocalization.getPeriodNames();
+    const periodNames = (this._getDateUtils() || dateLocalization).getPeriodNames();
     this._format12 = this._createComponent(
       $('<div>').addClass(TIMEVIEW_FORMAT12_CLASS),
       SelectBox,
@@ -304,10 +307,9 @@ class TimeView extends Editor<TimeViewProperties> {
 
     return {
       showSpinButtons: true,
-      displayValueFormatter(value): string {
-        return (value < 10 ? '0' : '') + value;
-      },
+      format: '00',
       stylingMode,
+      useMaskBehavior: false,
     };
   }
 
@@ -349,10 +351,25 @@ class TimeView extends Editor<TimeViewProperties> {
       case 'use24HourFormat':
       case '_showClock':
       case 'stylingMode':
+      case 'calendarType':
         this._invalidate();
         break;
       default:
         super._optionChanged(args);
+    }
+  }
+
+  _getCalendarType(): string {
+    const { calendarType } = this.option();
+    return calendarType || '';
+  }
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
     }
   }
 }

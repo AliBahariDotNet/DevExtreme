@@ -215,13 +215,13 @@ const escapeChars = (
   return pattern;
 };
 
-export const getFormat = (formatter: DateFormatter): string | undefined => {
+export const getFormat = (formatter: DateFormatter, dateUtils: any | undefined = undefined): string | undefined => {
   const processedIndexes = [];
-  const defaultPattern = formatValue(new Date(2009, 8, 8, 6, 5, 4), formatter) as string;
+  const defaultPattern = formatValue(dateUtils ? dateUtils.getDefaultDatePatternForFormat() : new Date(2009, 8, 8, 6, 5, 4), formatter) as string;
   const patternPositions = defaultPattern.split('').map((_, index) => index);
   let result = defaultPattern;
   const replacedPatterns: Record<string, number> = {};
-  const datePatterns = [
+  const datePatterns = dateUtils ? dateUtils.getDatePatternsForFormat() : [
     { date: new Date(2009, 8, 8, 6, 5, 4, 111), pattern: 'S' },
     { date: new Date(2009, 8, 8, 6, 5, 2), pattern: 's' },
     { date: new Date(2009, 8, 8, 6, 2, 4), pattern: 'm' },

@@ -8901,6 +8901,10 @@ declare module DevExpress.ui {
      */
     calendarOptions?: dxCalendarOptions;
     /**
+     * [descr:DateBoxBaseOptions.calendarType]
+     */
+    calendarType?: string;
+    /**
      * [descr:DateBoxBaseOptions.cancelButtonText]
      */
     cancelButtonText?: string;
@@ -10067,6 +10071,10 @@ declare module DevExpress.ui {
      * [descr:dxCalendarOptions.activeStateEnabled]
      */
     activeStateEnabled?: boolean;
+    /**
+     * [descr:dxCalendarOptions.calendarType]
+     */
+    calendarType?: string;
     /**
      * [descr:dxCalendarOptions.cellTemplate]
      */

@@ -5,6 +5,7 @@ import devices from '@js/core/devices';
 import type { DefaultOptionsRule } from '@js/core/options/utils';
 import browser from '@js/core/utils/browser';
 import dateUtils from '@js/core/utils/date';
+import persianDateUtils from '@js/core/utils/date_persian';
 import dateSerialization from '@js/core/utils/date_serialization';
 import { createTextElementHiddenCopy } from '@js/core/utils/dom';
 import { extend } from '@js/core/utils/extend';
@@ -107,6 +108,9 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
       dateOutOfRangeMessage: messageLocalization.format('validation-range'),
       applyButtonText: messageLocalization.format('OK'),
       adaptivityEnabled: false,
+
+      calendarType: null,
+
       calendarOptions: {},
       useHiddenSubmitElement: true,
 
@@ -492,14 +496,16 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     const { mode } = this.option();
     let displayedText;
 
+    const _dateLocalization = this._getDateUtils() || dateLocalization;
+
     if (mode === 'text') {
       const displayFormat = this._strategy.getDisplayFormat(this.option('displayFormat'));
-      displayedText = dateLocalization.format(value, displayFormat);
+      displayedText = _dateLocalization.format(value, displayFormat);
     } else {
       const format = this._getFormatByMode(mode);
 
       if (format) {
-        displayedText = dateLocalization.format(value, format);
+        displayedText = _dateLocalization.format(value, format);
       } else {
         displayedText = uiDateUtils.toStandardDateFormat(value, mode);
       }
@@ -716,6 +722,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
       case 'dateSerializationFormat':
       case 'interval':
       case 'disabledDates':
+      case 'calendarType':
       case 'calendarOptions':
       case 'todayButtonText':
         this._invalidate();
@@ -828,6 +835,20 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     super.clear();
     if (value === null) {
       this._applyInternalValidation(null);
+    }
+  }
+
+  _getCalendarType(): string {
+    const { calendarType } = this.option();
+    return calendarType || '';
+  }
+
+  _getDateUtils(): any {
+    switch (this._getCalendarType()) {
+      case 'persian':
+        return persianDateUtils;
+      default:
+        return undefined;
     }
   }
 }

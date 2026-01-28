@@ -115,6 +115,7 @@ class CalendarStrategy extends DateBoxStrategy {
       onContouredChanged: this._refreshActiveDescendant.bind(this),
       skipFocusCheck: true,
       todayButtonText,
+      calendarType: this.dateBox.option('calendarType'),
     });
   }
 

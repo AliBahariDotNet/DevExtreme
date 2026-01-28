@@ -313,6 +313,12 @@ export interface DateBoxBaseOptions<TComponent> extends Omit<
     calendarOptions?: dxCalendarOptions;
     /**
      * @docid
+     * @default null
+     * @public
+     */
+    calendarType?: string | null;
+    /**
+     * @docid
      * @default "Cancel"
      * @public
      */

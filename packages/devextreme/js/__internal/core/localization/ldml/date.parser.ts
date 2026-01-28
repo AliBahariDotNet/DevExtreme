@@ -349,12 +349,12 @@ const getOrderedFormatPatterns = (formatPatterns: string[]): string[] => {
 export const getParser = (format: string, dateParts: LdlmDateLocalization) => {
   const regExpInfo = getRegExpInfo(format, dateParts);
 
-  return (text: string): Date | null => {
+  return (text: string, resultDate: Date | undefined = undefined): Date | null => {
     const regExpResult = regExpInfo.regexp.exec(text);
 
     if (regExpResult) {
-      const now = new Date();
-      const date = new Date(now.getFullYear(), 0, 1);
+      const now = resultDate || new Date();
+      const date = resultDate || new Date(now.getFullYear(), 0, 1);
       const formatPatterns = getShortPatterns(regExpInfo.patterns);
       const maxPatternIndex = getMaxOrderedPatternIndex(formatPatterns);
       const orderedFormatPatterns = getOrderedFormatPatterns(formatPatterns);
